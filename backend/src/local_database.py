@@ -40,7 +40,8 @@ def init_db():
             dilithium_pub TEXT,
             dilithium_priv TEXT,
             kyber_pub TEXT,
-            kyber_priv TEXT
+            kyber_priv TEXT,
+            mnemonic TEXT
         )
     ''')
 
@@ -98,7 +99,7 @@ def get_db() -> Generator[sqlite3.Connection, None, None]:
         conn.close()
 
 
-def add_user(address: str, dilithium_pub: str, dilithium_priv: str, kyber_pub: str, kyber_priv: str):
+def add_user(address: str, dilithium_pub: str, dilithium_priv: str, kyber_pub: str, kyber_priv: str, mnemonic: str):
     """
     Adds or updates a user in the database with their cryptographic key material.
 
@@ -126,9 +127,9 @@ def add_user(address: str, dilithium_pub: str, dilithium_priv: str, kyber_pub: s
 
     # Insert new user
     c.execute("""
-        INSERT INTO users (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv)
-        VALUES (?, ?, ?, ?, ?)
-    """, (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv))
+        INSERT INTO users (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv, mnemonic)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv, mnemonic))
     conn.commit()
     conn.close()
 

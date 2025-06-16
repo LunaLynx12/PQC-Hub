@@ -1,6 +1,7 @@
 from dilithium_py.dilithium import Dilithium2 as Dilithium
 from blockchain import get_blockchain, create_transaction
 from local_database import add_user, get_user_by_address
+from mnemonics import generate_mnemonic_phrase
 from fastapi import APIRouter, HTTPException
 from models import UserRegisterRequest
 from kyber import generate_kyber_keys
@@ -15,6 +16,9 @@ bc = get_blockchain()
 # TODO: on register send private keys
 # TODO: read chain using ws
 # TODO: decrypt and store private messages
+# TODO: use the mnemonics in key gen
+
+###
 
 def generate_uid():
     return "0x" + uuid.uuid4().hex
@@ -29,6 +33,9 @@ async def register_user(user: UserRegisterRequest):
     """
     # Generate unique address
     address = generate_uid()
+
+    mnemonic = generate_mnemonic_phrase(15)
+    print("Generated Mnemonic:", mnemonic)
 
     # Generate Dilithium keys
     public_key_bytes, secret_key_bytes = Dilithium.keygen()
@@ -46,7 +53,8 @@ async def register_user(user: UserRegisterRequest):
         dilithium_pub=dilithium_pub_b64,
         dilithium_priv=dilithium_priv_b64,
         kyber_pub=kyber_pub_b64,
-        kyber_priv=kyber_priv_b64
+        kyber_priv=kyber_priv_b64,
+        mnemonic=mnemonic
     )
 
     # Sign registration transaction
@@ -71,6 +79,7 @@ async def register_user(user: UserRegisterRequest):
     return {
         "status": "success",
         "user_id": address,
+        "mnemonic": mnemonic,
         "dilithium_pub": dilithium_pub_b64,
         "kyber_pub": kyber_pub_b64
     }
