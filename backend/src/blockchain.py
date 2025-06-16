@@ -7,8 +7,6 @@ Uses Pydantic models consistently for chain structure.
 Author: LunaLynx12
 """
 
-# TODO: check unique registration addresses
-# TODO: use validator table from local_database.py
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from dilithium_py.dilithium import Dilithium2 as Dilithium

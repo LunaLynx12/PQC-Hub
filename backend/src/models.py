@@ -9,8 +9,6 @@ Author: LunaLynx12
 
 from pydantic import BaseModel, Field
 
-# TODO: use GraphQL instead of pydentic
-
 class User(BaseModel):
     """
     Represents a registered user in the system.
@@ -34,7 +32,8 @@ class UserRegisterRequest(BaseModel):
     """
     Model for incoming user registration requests.
     """
-    address: str = "0x1234567890"
+    #address: str = "0x1234567890"
+    pass
 
 class EncryptedMessage(BaseModel):
     sender: str

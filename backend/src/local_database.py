@@ -118,8 +118,15 @@ def add_user(address: str, dilithium_pub: str, dilithium_priv: str, kyber_pub: s
     """
     conn = get_connection()
     c = conn.cursor()
+    # Check if user already exists
+    c.execute("SELECT 1 FROM users WHERE address = ?", (address,))
+    if c.fetchone():
+        conn.close()
+        raise ValueError(f"User with address {address} already exists.")
+
+    # Insert new user
     c.execute("""
-        INSERT OR REPLACE INTO users (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv)
+        INSERT INTO users (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv)
         VALUES (?, ?, ?, ?, ?)
     """, (address, dilithium_pub, dilithium_priv, kyber_pub, kyber_priv))
     conn.commit()

@@ -7,16 +7,17 @@ from kyber import generate_kyber_keys
 from blockchain import get_blockchain
 from dilithium import sign_message
 import base64
-
+import uuid
 
 router = APIRouter()
 bc = get_blockchain()
 
-# TODO: assign random uid addresses for register, replace message from User 0x1234567891 added to memory pool. top only give the uid
-# TODO: register to be Unique
 # TODO: on register send private keys
 # TODO: read chain using ws
 # TODO: decrypt and store private messages
+
+def generate_uid():
+    return "0x" + uuid.uuid4().hex
 
 @router.post("/register", description="Used for registering a new address on blockchain", tags=["Accounts"], summary="Register a new address")
 async def register_user(user: UserRegisterRequest):
@@ -26,6 +27,8 @@ async def register_user(user: UserRegisterRequest):
     
     Only the public key is returned — private key is kept server-side for signing.
     """
+    # Generate unique address
+    address = generate_uid()
 
     # Generate Dilithium keys
     public_key_bytes, secret_key_bytes = Dilithium.keygen()
@@ -39,7 +42,7 @@ async def register_user(user: UserRegisterRequest):
 
     # Store in DB
     add_user(
-        address=user.address,
+        address=address,
         dilithium_pub=dilithium_pub_b64,
         dilithium_priv=dilithium_priv_b64,
         kyber_pub=kyber_pub_b64,
@@ -47,14 +50,14 @@ async def register_user(user: UserRegisterRequest):
     )
 
     # Sign registration transaction
-    message_to_sign = f"REGISTER:{user.address}"
+    message_to_sign = f"REGISTER:{address}"
     signature_bytes = sign_message(secret_key_bytes, message_to_sign)
     signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")
 
     # Create and add to mempool
     tx = create_transaction(
         tx_type="REGISTER",
-        sender=user.address,
+        sender=address,
         receiver="",
         data={
             "dilithium_pub": dilithium_pub_b64,
@@ -67,7 +70,7 @@ async def register_user(user: UserRegisterRequest):
 
     return {
         "status": "success",
-        "message": f"User {user.address} added to memory pool.",
+        "user_id": address,
         "dilithium_pub": dilithium_pub_b64,
         "kyber_pub": kyber_pub_b64
     }
