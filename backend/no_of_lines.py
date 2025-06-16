@@ -20,7 +20,7 @@ def count_lines_in_py_files(directory):
     return total_lines, py_files
 
 if __name__ == "__main__":
-    src_dir = 'src'  # Change this if your src directory is elsewhere
+    src_dir = 'src'
     if not os.path.exists(src_dir):
         print(f"Directory '{src_dir}' does not exist.")
     else:

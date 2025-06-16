@@ -1,10 +1,8 @@
-from fastapi import APIRouter
 from blockchain import get_blockchain
+from config import KNOWN_PEERS
+from fastapi import APIRouter
 import asyncio
 
-KNOWN_PEERS = [
-    "http://localhost:8001",  # TODO: use config.py
-]
 
 router = APIRouter()
 bc = get_blockchain()

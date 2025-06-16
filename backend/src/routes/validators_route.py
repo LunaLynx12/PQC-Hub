@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from blockchain import get_blockchain
-bc = get_blockchain()
 
+
+bc = get_blockchain()
 router = APIRouter()
 
 @router.get("/validate", description="Used for PoA validation", tags=["Validation"], summary="Validate the mempool")

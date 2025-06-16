@@ -3,7 +3,6 @@ import base64
 import os
 
 # --- Key Serialization Utilities ---
-
 def save_key(filename, key: bytes):
     with open(filename, "wb") as f:
         f.write(base64.b64encode(key))
@@ -11,7 +10,6 @@ def save_key(filename, key: bytes):
 def load_key(filename) -> bytes:
     with open(filename, "rb") as f:
         return base64.b64decode(f.read())
-
 # --- Identity Management and Signing ---
 
 def generate_identity():
@@ -39,9 +37,7 @@ def verify_signature(public_key: bytes, message: bytes, signature: bytes) -> boo
     return is_valid
 
 # --- Test Routine ---
-
 def test_dilithium_identity():
-    # If keys already exist, load them; else generate new
     if os.path.exists("dilithium_public.key") and os.path.exists("dilithium_secret.key"):
         pk, sk = load_identity()
     else:
@@ -50,7 +46,6 @@ def test_dilithium_identity():
     message = b"Hello, this is a quantum-safe signature."
     signature = sign_message(sk, message)
 
-    # Print sizes
     print("[+] Public key size:", len(pk), "bytes")
     print("[+] Secret key size:", len(sk), "bytes")
     print("[+] Signature size:", len(signature), "bytes")

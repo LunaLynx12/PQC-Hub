@@ -1,3 +1,6 @@
+TODO: Improve this, explain the competition, etc
+
+
 ## Notes
 
 - `Dilithium` is used for `digital signatures`
@@ -77,24 +80,6 @@ sequenceDiagram
     Note left of NodeA: All further communication\nuses symmetric encryption
 ```
 
-## Optional Add-on: Web Interface with HTTPS
-If you're adding a web UI (like Flask + HTML), you can show it in a separate flow like this:
-```mermaid
-sequenceDiagram
-    participant User as User Browser
-    participant WebUI as Web Server (Flask)
-    participant LocalNode as Local Node
-
-    title HTTPS for Local Web Interface
-
-    User->>WebUI: HTTPS Request (TLS Secured)
-    WebUI->>LocalNode: Communicate over localhost
-    LocalNode-->>WebUI: Return chat data
-    WebUI-->>User: Render chat page (HTTPS)
-
-    Note right of User: TLS protects browser ↔ node interaction
-```
-This keeps TLS where it belongs — protecting the user’s connection to their own local node.
 ## Bonus: Add Blockchain Layer if Used for Message Storage
 If you're storing messages in blocks on a blockchain:
 ```mermaid
@@ -111,5 +96,3 @@ sequenceDiagram
 
     Note right of Chain: Immutable message history
 ```
-
-# DO NOT USE TLS in the P2P layer !!!!

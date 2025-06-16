@@ -1,15 +1,22 @@
-from fastapi import APIRouter, HTTPException
-from blockchain import get_blockchain
-from models import UserRegisterRequest
-from local_database import add_user, get_user_by_address
 from dilithium_py.dilithium import Dilithium2 as Dilithium
-from dilithium import sign_message
 from blockchain import get_blockchain, create_transaction
+from local_database import add_user, get_user_by_address
+from fastapi import APIRouter, HTTPException
+from models import UserRegisterRequest
 from kyber import generate_kyber_keys
+from blockchain import get_blockchain
+from dilithium import sign_message
 import base64
+
 
 router = APIRouter()
 bc = get_blockchain()
+
+# TODO: assign random uid addresses for register, replace message from User 0x1234567891 added to memory pool. top only give the uid
+# TODO: register to be Unique
+# TODO: on register send private keys
+# TODO: read chain using ws
+# TODO: decrypt and store private messages
 
 @router.post("/register", description="Used for registering a new address on blockchain", tags=["Accounts"], summary="Register a new address")
 async def register_user(user: UserRegisterRequest):

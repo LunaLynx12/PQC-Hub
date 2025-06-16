@@ -7,9 +7,13 @@ Uses Pydantic models consistently for chain structure.
 Author: LunaLynx12
 """
 
-from dilithium_py.dilithium import Dilithium2 as Dilithium
-from typing import List, Dict, Optional
+# TODO: check unique registration addresses
+# TODO: use validator table from local_database.py
+
 from pydantic import BaseModel, Field, field_validator, model_validator
+from dilithium_py.dilithium import Dilithium2 as Dilithium
+from config import VALIDATORS, MAX_TRANSACTIONS_PER_BLOCK
+from typing import List, Dict, Optional
 from datetime import datetime
 from threading import Lock
 import hashlib
@@ -17,16 +21,15 @@ import base64
 import json
 
 
-# TODO: check unique registration addresses
-# TODO: use validator table from local_database.py
-VALIDATORS = ["validator_001", "validator_002"]
-BLOCK_TIME_MS = 5000  # Target time between blocks
-MAX_TRANSACTIONS_PER_BLOCK = 100
-
-
 class Transaction(BaseModel):
     """
-    Represents a transaction in the blockchain.
+    Represents a single transaction in the blockchain.
+
+    Attributes:
+        tx_type (str): Type of transaction - must be one of: REGISTER, PUBLIC_MESSAGE, GENESIS
+        sender (str): Wallet address of the sender
+        receiver (str): Wallet address of the recipient (can be empty for system-level transactions)
+        data (Dict[str, str]): Payload data such as keys or message hashes
     """
     tx_type: str = Field(..., pattern="^(REGISTER|PUBLIC_MESSAGE|GENESIS)$")
     sender: str                                                                     # Wallet address
@@ -36,37 +39,75 @@ class Transaction(BaseModel):
     @field_validator('data')
     @classmethod
     def validate_data(cls, v):
+        """
+        Validates that the `data` field is a dictionary and ensures all values are strings.
+
+        param v: The value to validate
+        type v: dict
+        return: Sanitized dictionary with string values
+        raises ValueError: If input is not a dictionary or contains non-string values
+        """
         if not isinstance(v, dict):
             raise ValueError("Data must be a dictionary")
         return {k: str(v) for k, v in v.items()}
 
 class Block(BaseModel):
     """
-    Represents a block in the blockchain.
+    Represents a single block in the blockchain.
+
+    Attributes:
+        index (int): Position in the blockchain (non-negative integer)
+        validator (str): Address of the validator who mined this block
+        transactions (List[Transaction]): List of transactions included in the block
+        prev_hash (str): SHA-256 hash of the previous block (exactly 64 characters)
+        timestamp (str): UTC timestamp when block was created (ISO format)
+        hash (str): SHA-256 hash of the block contents (computed automatically)
     """
     index: int = Field(..., ge=0)
     validator: str
     transactions: List[Transaction]
     prev_hash: str = Field(..., min_length=64, max_length=64)
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    hash: str = ""  # Allow empty initially
+    hash: str = ""                                                                  # Allow empty initially
 
     @model_validator(mode='after')
     def compute_hash_after_validation(self) -> 'Block':
+        """
+        Automatically computes and sets the block hash if it's empty.
+
+        return: Updated Block instance with computed hash
+        """
         if not self.hash:
             self.hash = self.compute_hash()
         return self
 
     def compute_hash(self) -> str:
-        """Returns SHA-256 hash of the block"""
+        """
+        Computes and returns the SHA-256 hash of the block.
+
+        return: Hex-encoded SHA-256 hash string
+        """
         block_data = self.model_dump(exclude={"hash"})
         serialized = json.dumps(block_data, sort_keys=True, separators=(',', ':'))
         return hashlib.sha256(serialized.encode()).hexdigest()
     
 class Blockchain:
-    """Thread-safe blockchain implementation"""
+    """
+    Thread-safe implementation of a blockchain with Proof-of-Authority consensus.
 
+    Features:
+        - Transaction pooling
+        - Block mining
+        - Chain validation
+        - Secure signing/verification using Dilithium
+    """
     def __init__(self):
+        """
+        Initializes a new blockchain instance with:
+            - Genesis block
+            - Empty pending transaction pool
+            - Thread locks for safe concurrent access
+        """
         self._chain_lock = Lock()
         self._pending_lock = Lock()
         self.chain: List[Block] = [self._create_genesis_block()]
@@ -74,7 +115,9 @@ class Blockchain:
     
     def _create_genesis_block(self) -> Block:
         """
-        Creates the first block in the chain with proper validation.
+        Creates the first block in the blockchain with proper validation.
+
+        return: Genesis block instance
         """
         # Create genesis transaction
         genesis_tx = Transaction(
@@ -100,7 +143,13 @@ class Blockchain:
         return genesis_block
 
     def add_transaction(self, tx: Transaction) -> bool:
-        """Thread-safe transaction addition"""
+        """
+        Adds a transaction to the pending pool in a thread-safe manner.
+
+        param tx: Transaction to add
+        type tx: Transaction
+        return: True if added successfully, False if pool is full
+        """
         with self._pending_lock:
             if len(self.pending_transactions) >= MAX_TRANSACTIONS_PER_BLOCK:
                 return False
@@ -108,7 +157,13 @@ class Blockchain:
             return True
 
     def mine_block(self, validator_address: str) -> Optional[Block]:
-        """Block creation with validation"""
+        """
+        Mines a new block from pending transactions by a valid validator.
+
+        param validator_address: Address of the validator attempting to mine
+        type validator_address: str
+        return: New mined block if successful, None otherwise
+        """
         print(f"[DEBUG] Attempting to mine block by {validator_address}")
 
         if validator_address not in VALIDATORS:
@@ -143,7 +198,13 @@ class Blockchain:
                 return None
 
     def validate_block(self, block: Block) -> bool:
-        """Comprehensive block validation"""
+        """
+        Performs comprehensive validation of a block before adding to the chain.
+
+        param block: Block to validate
+        type block: Block
+        return: True if block is valid, False otherwise
+        """
         # Basic structural checks
         if not block.hash == block.compute_hash():
             return False
@@ -162,7 +223,13 @@ class Blockchain:
         return True
 
     def _validate_transaction(self, tx: Transaction) -> bool:
-        """Transaction-specific validation"""
+        """
+        Validates individual transactions based on type.
+
+        param tx: Transaction to validate
+        type tx: Transaction
+        return: True if transaction is valid, False otherwise
+        """
         if tx.tx_type == "REGISTER":
             return self._validate_registration(tx)
         elif tx.tx_type == "PUBLIC_MESSAGE":
@@ -170,7 +237,13 @@ class Blockchain:
         return True
 
     def _validate_registration(self, tx: Transaction) -> bool:
-        """Validate registration transactions"""
+        """
+        Validates registration transactions with digital signature.
+
+        param tx: Registration transaction to validate
+        type tx: Transaction
+        return: True if signature is valid, False otherwise
+        """
         required_fields = {"dilithium_pub", "kyber_pub", "signature"}
         if not required_fields.issubset(tx.data.keys()):
             return False
@@ -184,6 +257,13 @@ class Blockchain:
             return False
 
     def _validate_message(self, tx: Transaction) -> bool:
+        """
+        Validates public message transactions with digital signature.
+
+        param tx: Message transaction to validate
+        type tx: Transaction
+        return: True if signature is valid, False otherwise
+        """
         print(f"[DEBUG] Validating PUBLIC_MESSAGE: {tx.data.keys()}")
         if "message_hash" not in tx.data:
             print("[ERROR] Missing 'message_hash'")
@@ -204,7 +284,13 @@ class Blockchain:
             return False
 
     def replace_chain(self, new_chain: List[Block]) -> bool:
-        """Chain replacement with validation"""
+        """
+        Replaces the current chain with a longer, valid incoming chain.
+
+        param new_chain: Candidate chain to replace current chain
+        type new_chain: List[Block]
+        return: True if chain replaced, False otherwise
+        """
         with self._chain_lock:
             if self.validate_chain(new_chain) and len(new_chain) > len(self.chain):
                 self.chain = new_chain
@@ -212,7 +298,13 @@ class Blockchain:
             return False
 
     def validate_chain(self, chain: List[Block]) -> bool:
-        """Full chain validation"""
+        """
+        Validates an entire blockchain chain for consistency and integrity.
+
+        param chain: Chain to validate
+        type chain: List[Block]
+        return: True if chain is valid, False otherwise
+        """
         if not chain or chain[0].index != 0:
             return False
 
@@ -226,7 +318,17 @@ class Blockchain:
 
 def create_transaction(tx_type: str, sender: str, receiver: str, data: dict) -> Transaction:
     """
-    Creates and returns a new transaction.
+    Factory function to create and return a new transaction.
+
+    param tx_type: Type of transaction (REGISTER, PUBLIC_MESSAGE, GENESIS)
+    type tx_type: str
+    param sender: Sender wallet address
+    type sender: str
+    param receiver: Receiver wallet address
+    type receiver: str
+    param data: Dictionary containing transaction payload
+    type data: dict
+    return: Newly created Transaction object
     """
     return Transaction(
         tx_type=tx_type,
@@ -236,6 +338,15 @@ def create_transaction(tx_type: str, sender: str, receiver: str, data: dict) -> 
     )
 
 _blockchain = Blockchain()
+"""
+Singleton instance of the blockchain shared across the application.
+"""
 
 def get_blockchain():
+    """
+    Returns the singleton instance of the blockchain.
+
+    return: Shared Blockchain instance
+    rtype: Blockchain
+    """
     return _blockchain

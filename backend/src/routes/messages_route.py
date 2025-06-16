@@ -1,19 +1,19 @@
+from local_database import get_user_by_address, DATABASE
+from dilithium import sign_message, hash_message
 from fastapi import APIRouter, HTTPException
+from blockchain import create_transaction
 from blockchain import get_blockchain
+from kyber import generate_shared_key
+from encryption import aes_encrypt
+from typing import Optional
 from models import Message
 import sqlite3
 import base64
-from typing import Optional
-from local_database import get_user_by_address, DATABASE
-from dilithium import sign_message, hash_message
-from blockchain import create_transaction
-from encryption import aes_encrypt
-from kyber import generate_shared_key
+
 
 router = APIRouter()
 bc = get_blockchain()
 
-# TODO: move this into a utility file
 def get_dilithium_secret_key(sender_address: str) -> bytes:
     result = get_user_by_address(sender_address)
     if not result:

@@ -9,6 +9,7 @@ Author: LunaLynx12
 
 from pydantic import BaseModel, Field
 
+# TODO: use GraphQL instead of pydentic
 
 class User(BaseModel):
     """
@@ -17,7 +18,6 @@ class User(BaseModel):
     address: str
     dilithium_pub: str
     kyber_pub: str
-
 
 class Message(BaseModel):
     """
@@ -30,13 +30,11 @@ class Message(BaseModel):
     timestamp: str = Field(default="", description="Auto-filled by server")
     signature: str = Field(default="", description="Auto-filled by server")
 
-
 class UserRegisterRequest(BaseModel):
     """
     Model for incoming user registration requests.
     """
     address: str = "0x1234567890"
-
 
 class EncryptedMessage(BaseModel):
     sender: str
