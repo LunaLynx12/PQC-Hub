@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head><title>Secure Chat</title></head>
+<body>
+    <h2>🔒 Local Chat</h2>
+    <p>If you see this, the Flask HTTP server works!</p>
+
+    <h3>Messages:</h3>
+    <div id="chat" style="height:200px; border:1px solid #ccc; padding:10px; overflow:auto;"></div>
+    <input type="text" id="msg" placeholder="Type message..." style="width: 80%" />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const ws = new WebSocket("wss://127.0.0.1:8765");
+
+        ws.onmessage = function(event) {
+            const div = document.createElement("div");
+            div.textContent = event.data;
+            document.getElementById("chat").appendChild(div);
+        };
+
+        function sendMessage() {
+            const input = document.getElementById("msg");
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(input.value);
+                input.value = "";
+            }
+        }
+
+        document.getElementById("msg").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
+</body>
+</html>
