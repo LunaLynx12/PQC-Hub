@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Search, MoreVertical, Users } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Users, Clipboard, User, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Participant {
   id: number;
@@ -38,6 +43,13 @@ export default function ContactsSidebar({
   onSelectConversation,
 }: ContactsSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [userAddress, setUserAddress] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const storedId = localStorage.getItem("user_id");
+    if (storedId) setUserAddress(storedId);
+  }, []);
 
   const filteredConversations = conversations.filter((convo) =>
     convo.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -56,6 +68,12 @@ export default function ContactsSidebar({
     }
   }
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(userAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1000);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white/5 border-r border-white/10">
       {/* Header */}
@@ -64,13 +82,41 @@ export default function ContactsSidebar({
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             PQC Chat
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-400 hover:text-white"
-          >
-            <MoreVertical className="h-5 w-5" />
-          </Button>
+
+          {/* User Icon with Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-400 hover:text-white"
+              >
+                <User className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="bg-white/5 border border-white/10 shadow-lg backdrop-blur-md text-white p-3 rounded-xl w-fit"
+              side="bottom"
+              align="end"
+            >
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-mono truncate max-w-[120px]">
+                  {userAddress}
+                </span>
+                <motion.button
+                  onClick={handleCopy}
+                  whileTap={{ scale: 0.85 }}
+                  className="text-white hover:text-blue-400 transition-colors"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Clipboard className="w-4 h-4" />
+                  )}
+                </motion.button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Search */}
@@ -160,7 +206,6 @@ export default function ContactsSidebar({
                             </span>
                           </div>
                         )}
-
                         {convo.unreadCount && (
                           <Badge className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
                             {convo.unreadCount}

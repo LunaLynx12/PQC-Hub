@@ -7,8 +7,6 @@ import {
   Send,
   Users,
   MoreVertical,
-  Phone,
-  Video,
   Smile,
   Paperclip,
 } from "lucide-react";
@@ -96,21 +94,7 @@ export default function ChatArea({
           <Button
             variant="ghost"
             size="icon"
-            className="text-slate-400 hover:text-white"
-          >
-            <Phone className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-400 hover:text-white"
-          >
-            <Video className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-slate-400 hover:text-white"
+            className="text-white hover:text-slate-400 hover:bg-transparent"
           >
             <MoreVertical className="h-5 w-5" />
           </Button>
