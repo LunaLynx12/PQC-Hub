@@ -85,7 +85,7 @@ const participantsData: Participant[] = [
 const conversationsData: Conversation[] = [
   {
     id: 1,
-    name: "Study Group",
+    name: "Developer's battlefield",
     isGroup: true,
     participants: [
       participantsData[0],
@@ -152,30 +152,25 @@ const conversationsData: Conversation[] = [
     ],
   },
   {
-    id: 3,
-    name: "Family Chat",
-    isGroup: true,
-    participants: [
-      participantsData[0],
-      participantsData[3],
-      participantsData[4],
-    ],
-    lastMessage: "I'm in!",
-    unreadCount: 1,
-    lastSeen: "8:05 PM",
+    id: 2,
+    name: "Charlie Brown",
+    isGroup: false,
+    participants: [participantsData[4]],
+    lastMessage: "All good! Just chilling.",
+    lastSeen: "9:05 AM",
     messages: [
       {
         id: 7,
-        senderId: 5,
-        text: "Anyone up for dinner plans this weekend? 🍽️",
-        timestamp: "8:00 PM",
+        senderId: 1,
+        text: "Hey Alice, how's it going?",
+        timestamp: "9:00 AM",
         status: "read",
       },
       {
         id: 8,
-        senderId: 3,
-        text: "I'm in! Let's try that new Italian place.",
-        timestamp: "8:05 PM",
+        senderId: 4,
+        text: "All good! Just chilling on this beautiful day ☀️",
+        timestamp: "9:05 AM",
         status: "delivered",
       },
     ],
