@@ -1,8 +1,14 @@
+"""
+Route for syncronysing peers on the network
+
+Author: LunaLynx12
+"""
+
+
 from blockchain import get_blockchain
 from config import KNOWN_PEERS
 from fastapi import APIRouter
 import asyncio
-
 
 router = APIRouter()
 bc = get_blockchain()

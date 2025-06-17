@@ -67,3 +67,10 @@ def generate_mnemonic_phrase(word_count: int = 12) -> str:
 
     entropy = generate_entropy(bits_map[word_count])
     return " ".join(entropy_to_mnemonic(entropy))
+
+def seed_to_master_key(mnemonic: str, passphrase: str = "") -> bytes:
+    """
+    Convert mnemonic + passphrase to a 64-byte seed.
+    """
+    salt = "mnemonic" + passphrase
+    return hashlib.pbkdf2_hmac("sha512", mnemonic.encode(), salt.encode(), 2048, dklen=64)

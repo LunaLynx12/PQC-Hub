@@ -1,3 +1,12 @@
+"""
+Route for managing accounts
+Includes register and whoami.
+
+Author: LunaLynx12
+"""
+
+
+from key_derivation import derive_dilithium_keypair, derive_kyber_keypair
 from dilithium_py.dilithium import Dilithium2 as Dilithium
 from blockchain import get_blockchain, create_transaction
 from local_database import add_user, get_user_by_address
@@ -13,13 +22,6 @@ import uuid
 router = APIRouter()
 bc = get_blockchain()
 
-# TODO: on register send private keys
-# TODO: read chain using ws
-# TODO: decrypt and store private messages
-# TODO: use the mnemonics in key gen
-
-###
-
 def generate_uid():
     return "0x" + uuid.uuid4().hex
 
@@ -33,9 +35,7 @@ async def register_user(user: UserRegisterRequest):
     """
     # Generate unique address
     address = generate_uid()
-
     mnemonic = generate_mnemonic_phrase(15)
-    print("Generated Mnemonic:", mnemonic)
 
     # Generate Dilithium keys
     public_key_bytes, secret_key_bytes = Dilithium.keygen()
@@ -80,8 +80,8 @@ async def register_user(user: UserRegisterRequest):
         "status": "success",
         "user_id": address,
         "mnemonic": mnemonic,
-        "dilithium_pub": dilithium_pub_b64,
-        "kyber_pub": kyber_pub_b64
+        "dilithium_priv": dilithium_priv_b64,
+        "kyber_priv": kyber_priv_b64
     }
 
 @router.post("/whoami/{address}", description="Used for retriving a user from blockchain", tags=["Accounts"], summary="Check an existing address")
@@ -95,3 +95,20 @@ async def whoami(address: str):
         del result["dilithium_priv"]
     
     return result
+
+# TODO: fix and implement
+@router.post("/recover", tags=["Accounts"])
+async def recover_account(mnemonic: str):
+    try:
+        # Re-derive keys from mnemonic
+        d_pub, d_priv = derive_dilithium_keypair(mnemonic)
+        k_pub, k_priv = derive_kyber_keypair(mnemonic)
+
+        # Return base64-encoded versions
+        return {
+            "status": "success",
+            "dilithium_pub": base64.b64encode(d_pub).decode(),
+            "kyber_pub": base64.b64encode(k_pub).decode()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Recovery failed: {str(e)}")

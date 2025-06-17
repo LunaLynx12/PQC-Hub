@@ -1,6 +1,12 @@
+"""
+Route for checking the current pool and validating it using PoA
+
+Author: LunaLynx12
+"""
+
+
 from fastapi import APIRouter, HTTPException
 from blockchain import get_blockchain
-
 
 bc = get_blockchain()
 router = APIRouter()

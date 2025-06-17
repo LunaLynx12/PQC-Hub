@@ -1,3 +1,10 @@
+"""
+Route for sending messages to the blockchain
+
+Author: LunaLynx12
+"""
+
+
 from local_database import get_user_by_address, DATABASE
 from dilithium import sign_message, hash_message
 from fastapi import APIRouter, HTTPException
@@ -9,7 +16,6 @@ from typing import Optional
 from models import Message
 import sqlite3
 import base64
-
 
 router = APIRouter()
 bc = get_blockchain()
@@ -95,21 +101,28 @@ async def send_message(msg: Message):
             db.commit()
 
         # Step 5: Add to blockchain if public
-        if msg.receiver == "public":
-            tx = create_transaction(
-                tx_type="PUBLIC_MESSAGE",
-                sender=msg.sender,
-                receiver="public",
-                data={
-                    "message_hash": msg_hash,
-                    "message": msg.content,
-                    "signature": signature_b64,
-                    "dilithium_pub": dilithium_pub_b64
-                }
-            )
+        tx_data = {
+            "message_hash": msg_hash,
+            "signature": signature_b64,
+            "dilithium_pub": dilithium_pub_b64,
+        }
 
-            if not bc.add_transaction(tx):
-                raise HTTPException(status_code=400, detail="Mempool full — cannot add transaction now.")
+        if msg.receiver == "public":
+            tx_data["message"] = msg.content
+
+        if msg.receiver != "public":
+            tx_data["ciphertext"] = encrypted_content
+            tx_data["kyber_ciphertext"] = ciphertext_b64
+
+        tx = create_transaction(
+            tx_type="PRIVATE_MESSAGE" if msg.receiver != "public" else "PUBLIC_MESSAGE",
+            sender=msg.sender,
+            receiver=msg.receiver,
+            data=tx_data
+        )
+
+        if not bc.add_transaction(tx):
+            raise HTTPException(status_code=400, detail="Mempool full — cannot add transaction now.")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Message failed: {str(e)}")

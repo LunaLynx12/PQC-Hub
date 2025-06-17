@@ -13,7 +13,9 @@ from dilithium_py.dilithium import Dilithium2 as Dilithium
 from config import VALIDATORS, MAX_TRANSACTIONS_PER_BLOCK
 from typing import List, Dict, Optional
 from datetime import datetime
+from fastapi import WebSocket
 from threading import Lock
+import asyncio
 import hashlib
 import base64
 import json
@@ -29,7 +31,7 @@ class Transaction(BaseModel):
         receiver (str): Wallet address of the recipient (can be empty for system-level transactions)
         data (Dict[str, str]): Payload data such as keys or message hashes
     """
-    tx_type: str = Field(..., pattern="^(REGISTER|PUBLIC_MESSAGE|GENESIS)$")
+    tx_type: str = Field(..., pattern="^(REGISTER|PUBLIC_MESSAGE|PRIVATE_MESSAGE|GENESIS)$")
     sender: str                                                                     # Wallet address
     receiver: str                                                                   # Can be empty for system-level transactions
     data: Dict[str, str]                                                            # Payload like keys or message hashes
@@ -110,6 +112,7 @@ class Blockchain:
         self._pending_lock = Lock()
         self.chain: List[Block] = [self._create_genesis_block()]
         self.pending_transactions: List[Transaction] = []
+        self.subscribers: List[WebSocket] = []
     
     def _create_genesis_block(self) -> Block:
         """
@@ -190,6 +193,9 @@ class Blockchain:
                 print("[SUCCESS] Block validated successfully")
                 self.pending_transactions.clear()
                 self.chain.append(new_block)
+                
+                self.notify_subscribers()
+
                 return new_block
             else:
                 print("[ERROR] Block failed validation")
@@ -313,6 +319,24 @@ class Blockchain:
                 return False
 
         return True
+    
+    def add_subscriber(self, websocket: WebSocket):
+        """Register a new WebSocket client"""
+        if websocket not in self.subscribers:
+            self.subscribers.append(websocket)
+
+    def remove_subscriber(self, websocket: WebSocket):
+        """Unregister a WebSocket client"""
+        if websocket in self.subscribers:
+            self.subscribers.remove(websocket)
+
+    def notify_subscribers(self):
+        """Send updated chain to all connected WebSocket clients"""
+        chain_data = [block.model_dump() for block in self.chain]
+        for ws in self.subscribers:
+            asyncio.create_task(
+                ws.send_text(json.dumps({"type": "CHAIN_UPDATE", "data": chain_data}))
+            )
 
 def create_transaction(tx_type: str, sender: str, receiver: str, data: dict) -> Transaction:
     """

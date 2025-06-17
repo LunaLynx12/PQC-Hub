@@ -1,3 +1,10 @@
+"""
+Route for testing dilithium, aes-cgm and kyber
+
+Author: LunaLynx12
+"""
+
+
 from dilithium_py.dilithium import Dilithium2 as Dilithium
 from encryption import aes_encrypt, aes_decrypt
 from fastapi import APIRouter, HTTPException
