@@ -8,7 +8,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 export default function RegisterScreen({
   onRegistered,
 }: {
-  onRegistered: (keys: { pub: string; priv: string }) => void;
+  onRegistered: (keys: { mnemonic: string; dilithium_pub: string; kyber_pub: string; user_id: string}) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,12 +17,25 @@ export default function RegisterScreen({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:8000/register", {
+      const res = await fetch("http://127.0.0.1:8000/register", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}), // Add empty object
       });
+
       if (!res.ok) throw new Error("Failed to register");
+
       const data = await res.json();
-      onRegistered({ pub: data.public_key, priv: data.private_key });
+      console.log("Full response from backend:", data); // 🔍 Add this line to see full response
+
+      onRegistered({
+        mnemonic: data.mnemonic || "N/A",
+        dilithium_pub: data.dilithium_priv || "N/A",  // Or adjust as needed
+        kyber_pub: data.kyber_pub || "N/A",    // Or adjust as needed
+        user_id: data.user_id || "N/A"
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -11,6 +11,7 @@ from routes import validators_route as validators_routes
 from routes import blockchain_route as blockchain_routes
 from routes import accounts_route as accounts_routes
 from routes import messages_route as messages_routes
+from fastapi.middleware.cors import CORSMiddleware
 from routes import tests_route as tests_routes
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
@@ -87,6 +88,15 @@ app.include_router(accounts_routes.router)
 app.include_router(p2p_routes.router)
 app.include_router(tests_routes.router)
 app.include_router(messages_routes.router)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 bc = get_blockchain()
 """
