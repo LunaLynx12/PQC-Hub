@@ -17,10 +17,18 @@ from contextlib import asynccontextmanager
 from routes import p2p_route as p2p_routes
 from blockchain import get_blockchain
 from local_database import init_db
+from p2p_node import P2PNode
 from fastapi import FastAPI
+import argparse
 import uvicorn
 import asyncio
+import config
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--api-port", type=int, default=8000, help="FastAPI server port")
+    parser.add_argument("--peer-port", type=int, default=8762, help="P2P peer server port")
+    return parser.parse_args()
 
 async def periodic_sync_task():
     """
@@ -34,7 +42,7 @@ async def periodic_sync_task():
     await asyncio.sleep(10)
     while True:
         print("[Background] Running periodic blockchain sync...")
-        # TODO use p2p_route.py
+        await p2p_routes.full_sync_endpoint()
         await asyncio.sleep(60)
 
 @asynccontextmanager
@@ -54,9 +62,18 @@ async def lifespan(app: FastAPI):
     """
     print("[Startup] Initializing database...")
     init_db()
-    print("[Startup] Starting periodic blockchain sync task...")
+
+    print(f"[Startup] Starting P2P node on port {config.peer_port}...")
+    p2p_routes.p2p_node = P2PNode("127.0.0.1", config.peer_port)
+    await p2p_routes.p2p_node.start()
+    asyncio.create_task(p2p_routes.p2p_node.scan_for_peers())
     asyncio.create_task(periodic_sync_task())
+
     yield
+
+    print("[Shutdown] Shutting down P2P node...")
+    if hasattr(p2p_routes, "p2p_node"):
+        await p2p_routes.p2p_node.server.ws_server.close()
 
 app = FastAPI(lifespan=lifespan)
 """
@@ -91,4 +108,11 @@ if __name__ == "__main__":
 
     Starts the development server on localhost port 8000 with reload enabled.
     """
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    args = parse_args()
+
+    # Override the global config ports
+    config.api_port = args.api_port
+    config.peer_port = args.peer_port
+
+    print(f"[Main] Launching FastAPI server on port {args.api_port} with P2P on {args.peer_port}")
+    uvicorn.run("main:app", host="127.0.0.1", port=args.api_port, reload=False)

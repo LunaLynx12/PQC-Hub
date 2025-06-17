@@ -21,15 +21,15 @@ This is a raw bytes value intended for symmetric encryption/decryption.
 """
 
 KNOWN_PEERS = [
-    "http://localhost:8001",
-    "http://localhost:8002",
-    "http://localhost:8003",
-    "http://localhost:8004",
-    "http://localhost:8005",
-    "http://localhost:8006",
-    "http://localhost:8007",
-    "http://localhost:8008",
-    "http://localhost:8009"
+    "127.0.0.1:8001",
+    "127.0.0.1:8002",
+    "127.0.0.1:8003",
+    "127.0.0.1:8004",
+    "127.0.0.1:8005",
+    "127.0.0.1:8006",
+    "127.0.0.1:8007",
+    "127.0.0.1:8008",
+    "127.0.0.1:8009"
 ]
 """
 List of known peer node URLs in the P2P network.
@@ -261,3 +261,6 @@ WORDLIST = [
     "catapult", "ceiling", "celestial", "cellar", "ceramic", "chancellor", "charcoal", "cheerful",
     "cheque", "cherry", "chestnut", "chime", "chirp", "chronic", "clam"
 ]
+
+api_port = 8000
+peer_port = 8762
