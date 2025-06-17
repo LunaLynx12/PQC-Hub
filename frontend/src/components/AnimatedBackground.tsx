@@ -1,57 +1,58 @@
-import { motion } from 'framer-motion';
+"use client";
+
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+interface Orb {
+  width: number;
+  height: number;
+  left: string;
+  top: string;
+}
+
+const generateOrbs = (count: number): Orb[] => {
+  return Array.from({ length: count }).map(() => ({
+    width: Math.random() * 200 + 150, // 150–350 px
+    height: Math.random() * 200 + 100, // 100–300 px
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+  }));
+};
 
 export default function AnimatedBackground() {
+  const [orbs, setOrbs] = useState<Orb[] | null>(null);
+
+  useEffect(() => {
+    // Only run on client
+    setOrbs(generateOrbs(6));
+  }, []);
+
+  if (!orbs) return null; // Don't render on server
+
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {/* Floating orbs */}
-      {[...Array(6)].map((_, i) => (
+    <>
+      {orbs.map((orb, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full bg-gradient-to-r from-blue-400/20 to-purple-600/20 blur-xl"
           style={{
-            width: Math.random() * 300 + 100,
-            height: Math.random() * 300 + 100,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            width: orb.width,
+            height: orb.height,
+            left: orb.left,
+            top: orb.top,
           }}
           animate={{
-            x: [0, Math.random() * 200 - 100],
-            y: [0, Math.random() * 200 - 100],
-            scale: [1, 1.2, 1],
+            x: [0, 20, -20, 0],
+            y: [0, -20, 20, 0],
           }}
           transition={{
-            duration: Math.random() * 10 + 10,
+            duration: 10,
             repeat: Infinity,
-            repeatType: "reverse",
+            repeatType: "loop",
             ease: "easeInOut",
           }}
         />
       ))}
-      
-      {/* Grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
-      
-      {/* Animated particles */}
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={`particle-${i}`}
-          className="absolute w-1 h-1 bg-blue-400/40 rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            y: [0, -100],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: Math.random() * 3 + 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-            ease: "easeOut",
-          }}
-        />
-      ))}
-    </div>
+    </>
   );
 }
