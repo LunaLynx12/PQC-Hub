@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from config import KNOWN_PEERS
 import asyncio
+
 # This will be set in main.py during startup
 p2p_node = None
 router = APIRouter()
@@ -23,12 +24,12 @@ async def websocket_endpoint(websocket: WebSocket):
 async def fetch_remote_chain(peer_url: str):
     """Fetches the blockchain from a remote peer."""
     ip, port = peer_url.split(":")
-    print(f"[Sync] Attempting to connect to peer at {ip}:{port}")
+    # print(f"[Sync] Attempting to connect to peer at {ip}:{port}")
     try:
         await p2p_node.connect_to_peer(ip, int(port))
         return p2p_node.blockchain.chain
     except Exception as e:
-        print(f"[Sync] Failed to fetch chain from {peer_url}: {e}")
+        # print(f"[Sync] Failed to fetch chain from {peer_url}: {e}")
         return None
 
 async def broadcast_chain_to_peers():
@@ -42,7 +43,7 @@ async def sync_with_peer(peer_url: str):
     """
     Syncs with one peer by fetching their chain and applying it if valid.
     """
-    print(f"[Sync] Initiating sync with peer: {peer_url}")
+    # print(f"[Sync] Initiating sync with peer: {peer_url}")
     remote_chain = await fetch_remote_chain(peer_url)
     if remote_chain:
         if p2p_node.blockchain.validate_chain(remote_chain):
@@ -50,11 +51,14 @@ async def sync_with_peer(peer_url: str):
                 print(f"[Sync] Replacing chain with longer one from {peer_url}")
                 p2p_node.blockchain.replace_chain(remote_chain)
             else:
-                print(f"[Sync] Remote chain from {peer_url} is not longer. Skipping.")
+                pass
+                # print(f"[Sync] Remote chain from {peer_url} is not longer. Skipping.")
         else:
-            print(f"[Sync] Received invalid chain from {peer_url}")
+            pass
+            # print(f"[Sync] Received invalid chain from {peer_url}")
     else:
-        print(f"[Sync] No chain received from {peer_url}")
+        pass
+        # print(f"[Sync] No chain received from {peer_url}")
     return {"status": "success", "action": "sync_complete", "peer": peer_url}
 
 @router.post("/sync-all", tags=["P2P"])
@@ -78,13 +82,15 @@ async def full_sync_endpoint():
 
 async def fetch_and_apply_chain(peer_url: str):
     """Fetch and validate chain from a single peer."""
-    print(f"[Sync] Fetching chain from {peer_url}")
+    # print(f"[Sync] Fetching chain from {peer_url}")
     remote_chain = await fetch_remote_chain(peer_url)
     if remote_chain and p2p_node.blockchain.validate_chain(remote_chain):
         if len(remote_chain) > len(p2p_node.blockchain.chain):
-            print(f"[Sync] Replacing chain from {peer_url}")
+            # print(f"[Sync] Replacing chain from {peer_url}")
             p2p_node.blockchain.replace_chain(remote_chain)
         else:
-            print(f"[Sync] Chain from {peer_url} is not longer. Skipping.")
+            pass
+            # print(f"[Sync] Chain from {peer_url} is not longer. Skipping.")
     else:
-        print(f"[Sync] Invalid chain from {peer_url}")
+        pass
+        # print(f"[Sync] Invalid chain from {peer_url}")

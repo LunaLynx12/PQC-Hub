@@ -12,10 +12,13 @@ from blockchain import get_blockchain, create_transaction
 from local_database import add_user, get_user_by_address
 from mnemonics import generate_mnemonic_phrase
 from fastapi import APIRouter, HTTPException
+from datetime import datetime, timezone
 from models import UserRegisterRequest
 from kyber import generate_kyber_keys
 from blockchain import get_blockchain
+from local_database import DATABASE
 from dilithium import sign_message
+import sqlite3
 import base64
 import uuid
 
@@ -61,6 +64,28 @@ async def register_user(user: UserRegisterRequest):
     message_to_sign = f"REGISTER:{address}"
     signature_bytes = sign_message(secret_key_bytes, message_to_sign)
     signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")
+
+    timestamp = datetime.now(timezone.utc).isoformat()
+    with sqlite3.connect(DATABASE) as db:
+        c = db.cursor()
+        c.execute("""
+            INSERT INTO messages (
+                sender, 
+                receiver, 
+                   content, 
+                   timestamp, 
+                   signature, 
+                   ciphertext
+               ) VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            "SYSTEM",
+            "public",
+            message_to_sign,
+            timestamp,
+            signature_b64,
+            ""
+        ))
+        db.commit()
 
     # Create and add to mempool
     tx = create_transaction(

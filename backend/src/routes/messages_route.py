@@ -9,6 +9,7 @@ from local_database import get_user_by_address, DATABASE
 from dilithium import sign_message, hash_message
 from fastapi import APIRouter, HTTPException
 from blockchain import create_transaction
+from datetime import datetime, timezone
 from blockchain import get_blockchain
 from kyber import generate_shared_key
 from encryption import aes_encrypt
@@ -16,6 +17,7 @@ from typing import Optional
 from models import Message
 import sqlite3
 import base64
+
 
 router = APIRouter()
 bc = get_blockchain()
@@ -79,6 +81,7 @@ async def send_message(msg: Message):
             encrypted_content = msg.content  # Public message doesn't need encryption
 
         # Step 4: Save message to database
+        timestamp = datetime.now(timezone.utc).isoformat()
         with sqlite3.connect(DATABASE) as db:
             c = db.cursor()
             c.execute("""
@@ -94,7 +97,7 @@ async def send_message(msg: Message):
                 msg.sender,
                 msg.receiver,
                 encrypted_content or "",
-                msg.timestamp,
+                timestamp,
                 signature_b64,
                 ciphertext_b64 or ""
             ))

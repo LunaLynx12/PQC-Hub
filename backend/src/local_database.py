@@ -158,3 +158,25 @@ def get_user_by_address(address: str) -> Optional[dict]:
             "kyber_pub": result[2]
         }
     return None
+
+def get_all_messages_from_db():
+    import sqlite3
+    from models import Message
+
+    with sqlite3.connect(DATABASE) as db:
+        c = db.cursor()
+        c.execute("SELECT * FROM messages")
+        rows = c.fetchall()
+
+    return [
+        Message(
+            id=row[0],
+            sender=row[1],
+            receiver=row[2],
+            content=row[3],
+            timestamp=row[4],
+            signature=row[5],
+            ciphertext=row[6]
+        )
+        for row in rows
+    ]

@@ -22,11 +22,13 @@ class Message(BaseModel):
     Represents a message exchanged between users.
     Set receiver to 'public' for public messages (stored on-chain).
     """
+    id: int = Field(default="", description="Auto-filled by server")
     sender: str
     receiver: str = "public"
     content: str
     timestamp: str = Field(default="", description="Auto-filled by server")
     signature: str = Field(default="", description="Auto-filled by server")
+    ciphertext: str = Field(default="", description="Auto-filled by server")
 
 class UserRegisterRequest(BaseModel):
     """
