@@ -227,7 +227,7 @@ class P2PNode:
             self.peers.discard(dead)
 
     async def connect_to_peer(self, peer_ip: str, peer_port: int):
-        uri = f"ws://{peer_ip}:{peer_port}"
+        uri = f"ws://{peer_ip}:{peer_port}/ws"
         if (peer_ip, peer_port) in self.connected_websockets or (peer_ip, peer_port) in self.failed_connections or (peer_ip, peer_port) == (self.host, self.port):
             return
         try:
