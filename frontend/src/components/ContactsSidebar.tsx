@@ -80,7 +80,7 @@ export default function ContactsSidebar({
       <div className="flex-shrink-0 p-6 border-b border-white/10">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            PQC Chat
+            PQC Hub
           </h1>
 
           {/* User Icon with Popover */}
@@ -89,7 +89,7 @@ export default function ContactsSidebar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-slate-400 hover:text-white"
+                className="text-white hover:text-slate-400 hover:bg-transparent"
               >
                 <User className="h-5 w-5" />
               </Button>
